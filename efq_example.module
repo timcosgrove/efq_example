@@ -1,0 +1,177 @@
+<?php
+/**
+ * @file
+ * Code for the efq_example module
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function efq_example_menu() {
+  $items['efq'] = array(
+    'title' => 'EntityFieldQuery example: recent published content',
+    'page callback' => 'efq_example_basic',
+    'access arguments' => array('access content'),
+  );
+
+  $items['efq/%/%'] = array(
+    'title' => 'EntityFieldQuery example: recent published content, with arguments',
+    'page callback' => 'efq_example_arguments',
+    'page arguments' => array(1, 2),
+    'access arguments' => array('access content'),
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_block_info().
+ */
+function efq_example_block_info() {
+  // This example comes from node.module.
+  $blocks['content_by_state'] = array(
+    'info' => t('Other Content In This State'),
+    'cache' => DRUPAL_NO_CACHE
+  );
+  return $blocks;
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function efq_example_block_view($delta = '') {
+  // This example comes from node.module. Note that you can also return a
+  // renderable array rather than rendered HTML for 'content'.
+  $block = array();
+
+  switch ($delta) {
+    case 'content_by_state':
+      $block = efq_example_content_by_state();
+      break;
+
+  }
+  return $block;
+}
+
+
+
+
+
+
+/**
+ * Implementation of hook_node_info().
+ */
+function efq_example_node_info() {
+  $items = array(
+    'efq_article' => array(
+      'name' => t('EFQ Article'),
+      'base' => 'node_content',
+      'description' => t('Article node type for EFQ example.'),
+      'has_title' => '1',
+      'title_label' => t('Title'),
+      'help' => '',
+    ),
+    'efq_page' => array(
+      'name' => t('EFQ Page'),
+      'base' => 'node_content',
+      'description' => t('Page type for the EFQ example module.'),
+      'has_title' => '1',
+      'title_label' => t('Title'),
+      'help' => '',
+    ),
+    'efq_photo' => array(
+      'name' => t('EFQ Photo'),
+      'base' => 'node_content',
+      'description' => t('Photo node type for the EFQ example module.'),
+      'has_title' => '1',
+      'title_label' => t('Title'),
+      'help' => '',
+    ),
+  );
+  return $items;
+}
+
+function efq_example_basic() {
+  // instantiate the query
+  $query = new EntityFieldQuery;
+  // set up some basic parameters
+  $query
+    ->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', array('efq_article', 'efq_page', 'efq_photo'))
+    ->propertyCondition('status', 1)
+    ->propertyOrderBy('created', 'DESC');
+  // add a standard range
+  $query->range(0, 10);
+
+  // execute the query
+  $result = $query->execute();
+  // return the nodes as teasers
+  $nodes = node_view_multiple(node_load_multiple(array_keys($result['node'])), 'teaser');
+
+  return $nodes;
+}
+
+function efq_example_arguments($state, $node_type) {
+  // instantiate the query
+  $query = new EntityFieldQuery;
+  // set up some basic parameters
+  $query
+    ->entityCondition('entity_type', 'node')
+    ->entityCondition('bundle', $node_type)
+    ->propertyCondition('status', 1)
+    ->propertyOrderBy('created', 'DESC');
+  // add a field query for the state
+  // we have different field names for each node type, so we need to make sure we build that
+  $field_name = "field_${node_type}_us_state";
+  $query->fieldCondition($field_name, 'value', $state);
+  // add a standard range
+  $query->range(0, 10);
+
+  // execute the query
+  $result = $query->execute();
+  // return the nodes as teasers
+  $nodes = node_view_multiple(node_load_multiple(array_keys($result['node'])), 'teaser');
+
+  return $nodes;
+}
+
+/**
+ * Produces content for a block, based on the state of the host node.
+ */
+
+function efq_example_content_by_state() {
+  $node = menu_get_object();
+  $block = array();
+  if (!empty($node)) {
+    // get the state value
+    $type = $node->type;
+    $field_name = "field_${type}_us_state";
+    if (count($node->$field_name)) {
+      $state = $node->{$field_name}['und'][0]['value'];
+    }
+    // instantiate the query
+    $query = new EntityFieldQuery;
+    // set up some basic parameters
+    $query
+      ->entityCondition('entity_type', 'node')
+      ->propertyCondition('status', 1)
+      ->propertyOrderBy('created', 'DESC');
+    // add the state, if we got a value
+    if ($state) {
+      $query->fieldCondition($field_name, 'value', $state);
+    }
+    // prevent the current node from displaying in the block
+    $query->propertyCondition('nid', $node->nid, '<>');
+    // add a small range
+    $query->range(0, 5);
+
+    // execute the query
+    $result = $query->execute();
+    // return the nodes as teasers
+    $nodes = node_view_multiple(node_load_multiple(array_keys($result['node'])), 'teaser');
+
+    $block['subject'] = t('Other Content for :state', array(':state' => $state));
+    $block['content'] = $nodes;
+  }
+  return $block;
+}

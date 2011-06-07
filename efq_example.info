@@ -1,0 +1,7 @@
+core = "7.x"
+description = "Provides some example uses of Entity Field Queries"
+name = "EFQ Example"
+package = "Other"
+
+dependencies[] = "image"
+dependencies[] = "list"

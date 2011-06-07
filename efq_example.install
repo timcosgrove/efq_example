@@ -1,0 +1,113 @@
+<?php
+/**
+ * @file
+ * Install file for efq_example
+ */
+/**
+ * Implements hook_install().
+ * Install all ctypes handled by this module.
+ */
+function efq_example_install() {
+  // an array of content type machine names to install
+  $ctypes = efq_example_ctypes();
+  efq_example_install_fields($ctypes);
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function efq_example_uninstall() {
+  $ctypes = efq_example_ctypes();
+  efq_example_uninstall_ctypes($ctypes);
+}
+/**
+ * List of ctypes handled by this module;
+ * this list should be complete for all ctypes handled by this module
+ */
+function efq_example_ctypes() {
+  $ctypes = array(
+    'efq_page',
+    'efq_article',
+    'efq_photo'
+  );
+  return $ctypes;
+}
+
+/**
+ * Install fields for a given ctype
+ *
+ * @param array $ctypes an array of ctypes
+ */
+function efq_example_install_fields($ctypes, $module = 'efq_example') {
+  node_types_rebuild(); // make sure the system is aware of new ctypes
+  foreach ($ctypes as $ctype) {
+    module_load_include('inc', $module, "fields/${module}.fields." . $ctype);
+    $fields_function = "${module}_${ctype}_fields";
+    foreach ($fields_function() as $field) {
+      // create the field if it doesn't exist
+      if (!field_info_field($field['field_config']['field_name'])) {
+        field_create_field($field['field_config']);
+      }
+        // create the field instance if it doesn't exist
+      if (!field_info_instance('node', $field['field_instance']['field_name'], $ctype)) {
+        field_create_instance($field['field_instance']);
+      }
+    }
+  }
+}
+
+/**
+ * Uninstall a set of ctypes
+ * This is stolen shamelessly from Pro Drupal Development 7.
+ */
+function efq_example_uninstall_ctypes($ctypes, $module='efq_example') {
+  foreach ($ctypes as $ctype) {
+    // gather nids of all nodes of this type
+    $nids = db_query("SELECT n.nid FROM {node} n WHERE n.type = :type", array(':type' => $ctype))->fetchCol();
+
+    // delete all nodes of this type
+    node_delete_multiple($nids);
+    // delete any fields defined by this module for this ctype;
+    // this is tricky; we need to leave behind fields that are used elsewhere
+    // relying on our convention of field_$ctype_* for ctype-specific fields here;
+    // anything else is something like body or group_audience
+    module_load_include('inc', $module, "fields/${module}.fields." . $ctype);
+    $fields_function = "${module}_${ctype}_fields";
+    foreach ($fields_function() as $field) {
+      if (preg_match("/^field_${ctype}/", $field['field_config']['field_name'])) {
+        field_delete_field($field['field_config']['field_name']);
+      }
+    }
+    // delete any remaining instances associated with this ctype
+    $instances = field_info_instances('node', $ctype);
+    foreach ($instances as $instance) {
+      field_delete_instance($instance);
+    }
+    // delete the ctype
+    node_type_delete($ctype);
+    // purge field info
+    field_purge_batch(1000);
+  }
+}
+
+
+function efq_example_place_top_hero() {
+  $values = array(
+    array(
+      'module' => 'efq_example',
+      'delta' => 'top_hero',
+      'theme' => 'energy',
+      'status' => 1,
+      'weight' => 0,
+      'region' => 'hero',
+      'pages' => '',
+      'cache' => -1,
+    ),
+  );
+  $query = db_insert('block')->fields(array('module', 'delta', 'theme', 'status', 'weight', 'region', 'pages', 'cache'));
+  foreach ($values as $record) {
+    $query->values($record);
+  }
+  $query->execute();
+}
+
