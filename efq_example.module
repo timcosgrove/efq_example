@@ -93,7 +93,7 @@ function efq_example_node_info() {
 
 function efq_example_basic() {
   // instantiate the query
-  $query = new EntityFieldQuery;
+  $query = new EntityFieldQuery();
   // set up some basic parameters
   $query
     ->entityCondition('entity_type', 'node')
@@ -113,7 +113,7 @@ function efq_example_basic() {
 
 function efq_example_arguments($state, $node_type) {
   // instantiate the query
-  $query = new EntityFieldQuery;
+  $query = new EntityFieldQuery();
   // set up some basic parameters
   $query
     ->entityCondition('entity_type', 'node')
