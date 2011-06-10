@@ -3,7 +3,6 @@
  * @file
  * Code for the efq_example module
  */
-
 /**
  * Implements hook_menu().
  */
@@ -100,14 +99,13 @@ function efq_example_basic() {
     ->entityCondition('bundle', array('efq_article', 'efq_page', 'efq_photo'))
     ->propertyCondition('status', 1)
     ->propertyOrderBy('created', 'DESC');
-  // add a standard range
-  $query->range(0, 10);
-
+  // add a standard pager
+  $query->pager();
   // execute the query
   $result = $query->execute();
   // return the nodes as teasers
   $nodes = node_view_multiple(node_load_multiple(array_keys($result['node'])), 'teaser');
-
+  $nodes['pager']['#markup'] = theme('pager', $query->pager);
   return $nodes;
 }
 
@@ -124,14 +122,14 @@ function efq_example_arguments($state, $node_type) {
   // we have different field names for each node type, so we need to make sure we build that
   $field_name = "field_${node_type}_us_state";
   $query->fieldCondition($field_name, 'value', $state);
-  // add a standard range
-  $query->range(0, 10);
-
+  // add a standard pager
+  $query->pager();
   // execute the query
   $result = $query->execute();
   // return the nodes as teasers
   $nodes = node_view_multiple(node_load_multiple(array_keys($result['node'])), 'teaser');
 
+  $nodes['pager']['#markup'] = theme('pager', $query->pager);
   return $nodes;
 }
 
@@ -174,4 +172,20 @@ function efq_example_content_by_state() {
     $block['content'] = $nodes;
   }
   return $block;
+}
+
+class NodeEntityFieldQuery extends EntityFieldQuery {
+  // define some defaults for the class
+  public function __construct() {
+    // now we don't need to define these over and over anymore
+    $this
+      ->entityCondition('entity_type', 'node')
+      ->propertyCondition('status', 1)
+      ->propertyOrderBy('created', 'DESC');
+    // define a pager
+    $this->pager();
+  }
+
+
+
 }
