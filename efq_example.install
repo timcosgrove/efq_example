@@ -11,6 +11,7 @@ function efq_example_install() {
   // an array of content type machine names to install
   $ctypes = efq_example_ctypes();
   efq_example_install_fields($ctypes);
+  efq_example_place_example_block();
 }
 
 /**
@@ -91,15 +92,15 @@ function efq_example_uninstall_ctypes($ctypes, $module='efq_example') {
 }
 
 
-function efq_example_place_top_hero() {
+function efq_example_place_example_block() {
   $values = array(
     array(
       'module' => 'efq_example',
-      'delta' => 'top_hero',
-      'theme' => 'energy',
+      'delta' => 'content_by_state',
+      'theme' => variable_get('theme_default', 'bartik'),
       'status' => 1,
       'weight' => 0,
-      'region' => 'hero',
+      'region' => 'sidebar_first',
       'pages' => '',
       'cache' => -1,
     ),
