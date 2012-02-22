@@ -80,13 +80,13 @@ function efq_example_efq_article_fields() {
   );
 
   // Exported field: 'node-efq_article-field_us_state'
-  $fields['node-efq_article-field_efq_article_us_state'] = array(
+  $fields['node-efq_article-field_us_state'] = array(
     'field_config' => array(
       'active' => '1',
       'cardinality' => '1',
       'deleted' => '0',
       'entity_types' => array(),
-      'field_name' => 'field_efq_article_us_state',
+      'field_name' => 'field_us_state',
       'foreign keys' => array(),
       'indexes' => array(
         'value' => array(
@@ -182,7 +182,7 @@ function efq_example_efq_article_fields() {
         ),
       ),
       'entity_type' => 'node',
-      'field_name' => 'field_efq_article_us_state',
+      'field_name' => 'field_us_state',
       'label' => 'US State',
       'required' => 0,
       'settings' => array(
