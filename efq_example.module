@@ -175,8 +175,8 @@ class NodeEntityFieldQuery extends EntityFieldQuery {
   /**
    * If we're on a node, and if the entity_type is node, exclude the local node from the query
    */
-  public function excludeNode($nid) {
-    if (!$nid) {
+  public function excludeNode($nid = '') {
+    if ($nid$nid = '') {
       $object = menu_get_object();
       $nid = $object->nid;
     }
